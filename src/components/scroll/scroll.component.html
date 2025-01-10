@@ -1,0 +1,44 @@
+<h2 *ngIf="!reverse">Forward</h2>
+<h2 *ngIf="reverse">Reverse</h2>
+
+<div style="min-height: 1rem;" class="flex align-items-center">
+  <ng-container *ngIf="dataSourceApiService.summary.length">
+    {{ dataSourceApiService.summary }}
+  </ng-container>
+  <ng-container *ngIf="nextLoadOnItemId">
+    ( Next load on item id {{ nextLoadOnItemId }} )
+  </ng-container>
+</div>
+
+<div *ngIf="reverse" style="min-height: 5px;">
+  <p-progressBar *ngIf="showProgressBar" mode="indeterminate" [style]="{ height: '5px' }" />
+</div>
+
+<p-scroller #scroller
+  styleClass="border-1 surface-border w-full scroller"
+  [class.infiniteScrollLoading]="infiniteScrollLoading"
+  [scrollHeight]="((dataSourceApiService.limit * scrollerItemSize)) + 'px'"
+  [items]="dataSourceApiService.getData(reverse)"
+  [trackBy]="trackByFn"
+  [itemSize]="scrollerItemSize"
+  [lazy]="true"
+  (onLazyLoad)="loadData(scroller)"
+>
+  <ng-template pTemplate="item" let-item let-options="options">
+    <div #itemElement
+      [id]="item.id"
+      class="scroller-item pl-2 pr-4" [ngClass]="{ 'surface-ground': options.odd }"
+      observeVisibility
+      [observerId]="item.id"
+      [debounceTime]="5"
+      (visible)="loadData({itemId: item.id, itemElement})"
+    >
+      <div class="quote">({{item.id}})  {{ item.quote }}</div>
+      <div class="author">-- {{ item.author }}</div>
+    </div>
+  </ng-template>
+</p-scroller>
+
+<div *ngIf="!reverse" style="min-height: 5px;">
+  <p-progressBar *ngIf="showProgressBar" mode="indeterminate" [style]="{ height: '5px' }" />
+</div>

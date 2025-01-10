@@ -1,0 +1,33 @@
+:host {
+  ::ng-deep {
+    .p-virtualscroller-content {
+      position: relative;
+      top: initial;
+      left: initial;
+    }
+
+    .p-scroller-content {
+      max-width: 100%;
+
+      > div {
+        height: var(--scroller-item-height);
+      }
+    }
+  }
+}
+
+.scroller-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-evenly;
+  height: var(--scroller-item-height);
+  overflow: hidden;
+}
+
+.quote {
+  max-width: 100%;
+  text-wrap-mode: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
