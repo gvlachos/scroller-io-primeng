@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { Scroller, ScrollerModule } from 'primeng/scroller';
-import { filter, map, tap } from 'rxjs';
+import { tap } from 'rxjs';
 import { ObserveVisibilityDirective } from '../../directives/intersection-observer/observer-visibility.directive';
 import { DefaultLimit, ItemHeight } from '../../model/constants';
 import { Quote } from '../../model/data.model';
