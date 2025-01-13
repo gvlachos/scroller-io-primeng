@@ -92,13 +92,12 @@ export class ScrollComponent {
     if (this.loading()) return;
 
     if (this.dataSourceApiService.response && !atLoadItem ) {
-      this.showProgressBar = true;
       return;
     }
 
     this.firstTimeLoading = !this.dataSourceApiService.response;
 
-    this.infiniteScrollLoading = !!this.dataSourceApiService.response && atLoadItem;
+    this.infiniteScrollLoading = !this.firstTimeLoading && atLoadItem;
 
     this.showProgressBar = true;
 
