@@ -62,61 +62,29 @@ export class ScrollComponent {
     return this.dataSourceApiService.itemFromPosition(position)?.id;
   }
 
-  private onFirstTimeLoadingAction(scroller: Scroller | null): boolean {
-    if (!this.firstTimeLoading) return true;
+  // private onLoad()
 
-    if (!scroller) {
-      console.warn('No scroller element provided for first time load');
+  private onFirstTimeDataLoaded(scroller: Scroller) {
+    setTimeout(() => {
+      const scrollContainer = scroller.getElementRef().nativeElement;
+      scrollContainer.scrollTop = this.reverse ? scrollContainer.scrollHeight : 0;
+      this.nextLoadOnItemId = this.getLoadItemId();
+    }, 1);
+  }
+
+  private onInfiniteScrollDataLoaded(scrollContainer: HTMLDivElement) {
+    const lastItemId = this.dataSourceApiService.itemFromPosition(-1)?.id;
+    const nextToLastItemId = this.dataSourceApiService.itemFromPosition(-2)?.id;
+    const valid = this.nextLoadOnItemId && lastItemId && nextToLastItemId;
+
+    if ( valid && this.reverse) {
+      scrollContainer.scrollTop += (lastItemId - nextToLastItemId) * ItemHeight;
+      this.nextLoadOnItemId = this.getLoadItemId();
+    } else if (valid) {
+      this.nextLoadOnItemId = this.getLoadItemId();
     } else {
-      setTimeout(() => {
-        const scrollContainer = scroller.getElementRef().nativeElement;
-        scrollContainer.scrollTop = this.reverse ? scrollContainer.scrollHeight : 0;
-        this.nextLoadOnItemId = this.getLoadItemId();
-      }, 1);
-
-      this.clear();
+      console.warn('Last item id', lastItemId, ' next to last item id', nextToLastItemId);
     }
-
-    return false
-  }
-
-  private onInfiniteScrollLoaded(scrollContainer: HTMLDivElement) {
-      const lastItemId = this.dataSourceApiService.itemFromPosition(-1)?.id;
-      const nextToLastItemId = this.dataSourceApiService.itemFromPosition(-2)?.id;
-      const valid = this.nextLoadOnItemId && lastItemId && nextToLastItemId;
-
-      if ( valid && this.reverse) {
-        scrollContainer.scrollTop += (lastItemId - nextToLastItemId) * ItemHeight;
-        this.nextLoadOnItemId = this.getLoadItemId();
-      } else if (valid) {
-        this.nextLoadOnItemId = this.getLoadItemId();
-      } else {
-        console.warn('Last item id', lastItemId, ' next to last item id', nextToLastItemId);
-      }
-  }
-
-  private loadDataAction(options: Scroller | {itemId: number, itemElement: HTMLDivElement}) {
-    const scroller = options instanceof Scroller ? options : null;
-    const itemElement = options instanceof Scroller ? null : options.itemElement;
-
-    this.showProgressBar = true;
-
-    this.dataSourceApiService.load().pipe(
-      filter(() => this.onFirstTimeLoadingAction(scroller)),
-      map(() => {
-        const scrollContainer = itemElement
-          ? itemElement.closest('.scroller') as HTMLDivElement
-          : null;
-
-        if (scrollContainer) {
-          return scrollContainer;
-        }
-
-        return null;
-      }),
-      filter(scrollContainer => !!scrollContainer),
-      tap(scrollContainer => this.onInfiniteScrollLoaded(scrollContainer)),
-    ).subscribe(() => this.clear());
   }
 
   protected loadData(options: Scroller | {itemId: number, itemElement: HTMLDivElement}) {
@@ -124,7 +92,6 @@ export class ScrollComponent {
     const atLoadItem = !!this.nextLoadOnItemId && !!itemId && this.nextLoadOnItemId <= itemId;
 
     if (this.loading()) return;
-
 
     if (this.dataSourceApiService.response && !atLoadItem ) {
       this.showProgressBar = true;
@@ -135,7 +102,31 @@ export class ScrollComponent {
 
     this.infiniteScrollLoading = !!this.dataSourceApiService.response && atLoadItem;
 
-    this.loadDataAction(options);
+    this.showProgressBar = true;
+
+    this.dataSourceApiService.load().pipe(
+      tap(() => {
+        const scroller = options instanceof Scroller ? options : null;
+        const itemElement = options instanceof Scroller ? null : options.itemElement;
+        const scrollContainer = itemElement
+          ? itemElement.closest('.scroller') as HTMLDivElement
+          : null;
+
+        if (this.firstTimeLoading && scroller) {
+          this.onFirstTimeDataLoaded(scroller);
+        } else if (this.firstTimeLoading) {
+          console.warn('No scroller element');
+          return;
+        }
+
+        if (!this.firstTimeLoading && scrollContainer) {
+          this.onInfiniteScrollDataLoaded(scrollContainer);
+        } else if (!this.firstTimeLoading) {
+          console.warn('No scrollContainer element');
+          return;
+        }
+      }),
+    ).subscribe(() => this.clear());
   }
 
   protected trackByFn(index: number, item: Quote) {
