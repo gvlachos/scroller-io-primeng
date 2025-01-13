@@ -62,8 +62,6 @@ export class ScrollComponent {
     return this.dataSourceApiService.itemFromPosition(position)?.id;
   }
 
-  // private onLoad()
-
   private onFirstTimeDataLoaded(scroller: Scroller) {
     setTimeout(() => {
       const scrollContainer = scroller.getElementRef().nativeElement;
